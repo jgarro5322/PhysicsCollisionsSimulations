@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>High School Physics: 1D Collisions Interactive Lab</title>
+  
+  <style>
+    /* Base reset & typography */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    /* Layout Utility Classes */
+    .app-header {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .header-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .main-grid {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      flex: 1;
+    }
+    @media (min-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 8fr 4fr;
+      }
+    }
+
+    /* Card Containers */
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    /* Object Input Cards */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 640px) {
+      .controls-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .card-obj-1 { border-top: 4px solid #2563eb; }
+    .card-obj-2 { border-top: 4px solid #e11d48; }
+
+    /* Form controls */
+    .slider-group {
+      margin-top: 12px;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      appearance: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .card-obj-2 input[type="range"]::-webkit-slider-thumb {
+      background: #e11d48;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: #f1f5f9; }
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success {
+      background: #059669;
+      color: #ffffff;
+      border-color: #059669;
+    }
+    .btn-success:hover { background: #047857; }
+
+    /* Telemetry Table */
+    .telemetry-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: left;
+    }
+    .telemetry-table th, .telemetry-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .telemetry-table th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+    }
+
+    /* Canvas styling */
+    canvas {
+      display: block;
+      width: 100%;
+      height: 300px;
+      background: #f8fafc;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-emerald { background: #d1fae5; color: #065f46; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-content">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="background: #2563eb; color: white; padding: 8px; border-radius: 8px; font-weight: bold;">
+          ⚡
+        </div>
+        <div>
+          <h1 style="font-size: 1.1rem; font-weight: 800; color: #0f172a;">Physics Collisions Lab</h1>
+          <p style="font-size: 0.75rem; color: #64748b;">1D Momentum & Kinetic Energy Simulator</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button id="btn-guide-modal" class="btn">📖 Lab Guide</button>
+        <button id="btn-export-csv" class="btn btn-success">📥 Export Data CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-grid">
+
+    <!-- LEFT COLUMN: Canvas & Main Controls -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      
+      <!-- Simulation Canvas Card -->
+      <div class="card">
+        <div style="padding: 10px 16px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-family: monospace;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span id="status-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+            <span id="status-text" style="font-weight: bold; color: #334155;">READY</span>
+            <span style="color: #cbd5e1;">|</span>
+            <span>Time: <strong id="time-display" style="color: #0f172a;">0.00</strong>s</span>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <label style="cursor: pointer;"><input type="checkbox" id="chk-vectors" checked> Velocities</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="chk-momenta" checked> Momenta</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="chk-com" checked> Center of Mass</label>
+          </div>
+        </div>
+
+        <div style="position: relative; width: 100%;">
+          <canvas id="simCanvas"></canvas>
+        </div>
+
+        <div style="padding: 12px 16px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-play" class="btn btn-primary">▶ Play</button>
+            <button id="btn-step" class="btn">⏭ Step</button>
+            <button id="btn-reset" class="btn">🔄 Reset</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem;">
+            <span>Speed:</span>
+            <button class="btn btn-speed active" data-speed="1.0" style="padding: 4px 10px;">1.0x</button>
+            <button class="btn btn-speed" data-speed="0.5" style="padding: 4px 10px;">0.5x</button>
+            <button class="btn btn-speed" data-speed="0.25" style="padding: 4px 10px;">0.25x</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-grid">
+        
+        <!-- Object 1 (Blue) -->
+        <div class="card card-obj-1" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 0.9rem; color: #2563eb; font-weight: 700;">Object 1 (Blue)</h3>
+            <span style="font-family: monospace; font-size: 0.8rem; background: #eff6ff; padding: 2px 6px; border-radius: 4px; color: #1e40af;">
+              p₁ = <span id="p1-inline">+3.00</span> kg·m/s
+            </span>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Mass (m₁)</span>
+              <span style="color: #2563eb;"><span id="m1-val">1.50</span> kg</span>
+            </div>
+            <input type="range" id="m1" min="0.2" max="10.0" step="0.1" value="1.5">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Initial Velocity (v₁)</span>
+              <span style="color: #2563eb;"><span id="v1-val">+2.00</span> m/s</span>
+            </div>
+            <input type="range" id="v1" min="-10.0" max="10.0" step="0.5" value="2.0">
+          </div>
+        </div>
+
+        <!-- Object 2 (Red) -->
+        <div class="card card-obj-2" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 0.9rem; color: #e11d48; font-weight: 700;">Object 2 (Red)</h3>
+            <span style="font-family: monospace; font-size: 0.8rem; background: #fff1f2; padding: 2px 6px; border-radius: 4px; color: #9f1239;">
+              p₂ = <span id="p2-inline">-2.00</span> kg·m/s
+            </span>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Mass (m₂)</span>
+              <span style="color: #e11d48;"><span id="m2-val">1.00</span> kg</span>
+            </div>
+            <input type="range" id="m2" min="0.2" max="10.0" step="0.1" value="1.0">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Initial Velocity (v₂)</span>
+              <span style="color: #e11d48;"><span id="v2-val">-2.00</span> m/s</span>
+            </div>
+            <input type="range" id="v2" min="-10.0" max="10.0" step="0.5" value="-2.0">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Elasticity Control Card -->
+      <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h3 style="font-size: 0.85rem; font-weight: 700;">Collision Elasticity (e)</h3>
+            <p style="font-size: 0.75rem; color: #64748b;">Controls energy loss during impact</p>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button id="btn-elastic" class="btn" style="font-size: 0.75rem; padding: 4px 8px;">Elastic (100%)</button>
+            <button id="btn-partial" class="btn" style="font-size: 0.75rem; padding: 4px 8px;">Partial (50%)</button>
+            <button id="btn-inelastic" class="btn" style="font-size: 0.75rem; padding: 4px 8px;">Inelastic (0%)</button>
+          </div>
+        </div>
+        <div>
+          <div class="slider-label">
+            <span>Restitution Coefficient:</span>
+            <span id="e-val" style="font-weight: bold; color: #4f46e5;">100%</span>
+          </div>
+          <input type="range" id="elasticity" min="0" max="1" step="0.05" value="1">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Dashboard & Lab Log -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      
+      <!-- Preset Experiments -->
+      <div class="card" style="padding: 16px;">
+        <h3 style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 10px;">🧪 Preset Experiments</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button class="btn btn-preset" data-preset="1" style="flex-direction: column; align-items: flex-start; text-align: left; padding: 8px;">
+            <strong style="color: #2563eb;">1. Equal Mass</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">m₁ = m₂, Elastic</span>
+          </button>
+          <button class="btn btn-preset" data-preset="2" style="flex-direction: column; align-items: flex-start; text-align: left; padding: 8px;">
+            <strong style="color: #e11d48;">2. Inelastic Stick</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">Objects combine</span>
+          </button>
+          <button class="btn btn-preset" data-preset="3" style="flex-direction: column; align-items: flex-start; text-align: left; padding: 8px;">
+            <strong style="color: #d97706;">3. Heavy Hits Light</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">m₁ &gt;&gt; m₂</span>
+          </button>
+          <button class="btn btn-preset" data-preset="4" style="flex-direction: column; align-items: flex-start; text-align: left; padding: 8px;">
+            <strong style="color: #059669;">4. Opposite Momentum</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">p₁ = -p₂</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Calculation Readouts -->
+      <div class="card" style="padding: 16px;">
+        <h3 style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+          📊 Real-Time Physics Telemetry
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; font-family: monospace; font-size: 0.8rem;">
+          
+          <!-- Momentum -->
+          <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-family: sans-serif; font-size: 0.75rem; font-weight: 700; color: #475569; display: flex; justify-content: space-between;">
+              <span>Total Momentum (p)</span>
+              <span class="badge badge-emerald">Conserved ✓</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+              <div>
+                <span style="font-size: 0.7rem; color: #64748b;">Initial (p<sub>i</sub>)</span>
+                <div><strong id="pi-total">+1.00</strong> kg·m/s</div>
+              </div>
+              <div>
+                <span style="font-size: 0.7rem; color: #64748b;">Current (p)</span>
+                <div><strong id="pf-total" style="color: #4f46e5;">+1.00</strong> kg·m/s</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Energy -->
+          <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div style="font-family: sans-serif; font-size: 0.75rem; font-weight: 700; color: #475569; display: flex; justify-content: space-between;">
+              <span>Kinetic Energy (KE)</span>
+              <span id="ke-status-badge" class="badge badge-blue">100% Retained</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+              <div>
+                <span style="font-size: 0.7rem; color: #64748b;">Initial (KE<sub>i</sub>)</span>
+                <div><strong id="kei-total">5.00</strong> J</div>
+              </div>
+              <div>
+                <span style="font-size: 0.7rem; color: #64748b;">Current (KE)</span>
+                <div><strong id="kef-total" style="color: #d97706;">5.00</strong> J</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Individual Values Table -->
+          <table class="telemetry-table">
+            <thead>
+              <tr>
+                <th>Object</th>
+                <th>Velocity</th>
+                <th>Momentum</th>
+                <th>KE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color: #2563eb; font-weight: bold;">Obj 1</td>
+                <td id="v1-live">+2.00 m/s</td>
+                <td id="p1-live">+3.00 kg·m/s</td>
+                <td id="ke1-live">3.00 J</td>
+              </tr>
+              <tr>
+                <td style="color: #e11d48; font-weight: bold;">Obj 2</td>
+                <td id="v2-live">-2.00 m/s</td>
+                <td id="p2-live">-2.00 kg·m/s</td>
+                <td id="ke2-live">2.00 J</td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+
+      <!-- Trial Recorder -->
+      <div class="card" style="padding: 16px; flex: 1; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b;">📋 Recorded Trials</h3>
+          <button id="btn-record-trial" class="btn btn-success" style="font-size: 0.75rem; padding: 4px 8px;">+ Record Trial</button>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; max-height: 160px; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <table class="telemetry-table" style="font-family: monospace;">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Type</th>
+                <th>p<sub>i</sub></th>
+                <th>p<sub>f</sub></th>
+                <th>KE<sub>i</sub></th>
+                <th>KE<sub>f</sub></th>
+              </tr>
+            </thead>
+            <tbody id="trial-log-body">
+              <tr id="no-trials-row">
+                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 16px; font-style: italic;">
+                  No recorded trials yet.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    const state = {
+      cart1: { x: 0, y: 0, m: 1.5, v: 2.0, vInitial: 2.0, width: 60, height: 36, color: '#2563eb' },
+      cart2: { x: 0, y: 0, m: 1.0, v: -2.0, vInitial: -2.0, width: 50, height: 36, color: '#e11d48' },
+      elasticity: 1.0,
+      isRunning: false,
+      time: 0,
+      timeScale: 1.0,
+      showVectors: true,
+      showMomenta: true,
+      showCOM: true,
+      pixelsPerMeter: 40,
+      trackY: 180,
+      particles: [],
+      recordedTrials: []
+    };
+
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const m1Input = document.getElementById('m1');
+    const v1Input = document.getElementById('v1');
+    const m2Input = document.getElementById('m2');
+    const v2Input = document.getElementById('v2');
+    const elasticityInput = document.getElementById('elasticity');
+
+    const btnPlay = document.getElementById('btn-play');
+    const btnStep = document.getElementById('btn-step');
+    const btnReset = document.getElementById('btn-reset');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const timeDisplay = document.getElementById('time-display');
+
+    function safeRoundRect(context, x, y, width, height, radius) {
+      const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+      context.beginPath();
+      context.moveTo(x + r, y);
+      context.lineTo(x + width - r, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + r);
+      context.lineTo(x + width, y + height - r);
+      context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      context.lineTo(x + r, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - r);
+      context.lineTo(x, y + r);
+      context.quadraticCurveTo(x, y, x + r, y);
+      context.closePath();
+    }
+
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = rect.width || 700;
+      const h = 300;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+
+      state.trackY = h / 2 + 20;
+      updateCartSizes();
+      draw();
+    }
+
+    function updateCartSizes() {
+      state.cart1.width = 38 + Math.sqrt(state.cart1.m) * 16;
+      state.cart1.height = 24 + Math.sqrt(state.cart1.m) * 10;
+      state.cart2.width = 38 + Math.sqrt(state.cart2.m) * 16;
+      state.cart2.height = 24 + Math.sqrt(state.cart2.m) * 10;
+
+      state.cart1.y = state.trackY - state.cart1.height;
+      state.cart2.y = state.trackY - state.cart2.height;
+    }
+
+    function updateDashboard() {
+      const c1 = state.cart1;
+      const c2 = state.cart2;
+
+      const p1 = c1.m * c1.v;
+      const p2 = c2.m * c2.v;
+      const pTotal = p1 + p2;
+
+      const ke1 = 0.5 * c1.m * c1.v * c1.v;
+      const ke2 = 0.5 * c2.m * c2.v * c2.v;
+      const keTotal = ke1 + ke2;
+
+      const p1_i = c1.m * c1.vInitial;
+      const p2_i = c2.m * c2.vInitial;
+      const piTotal = p1_i + p2_i;
+
+      const ke1_i = 0.5 * c1.m * c1.vInitial * c1.vInitial;
+      const ke2_i = 0.5 * c2.m * c2.vInitial * c2.vInitial;
+      const keiTotal = ke1_i + ke2_i;
+
+      document.getElementById('p1-inline').textContent = (p1 >= 0 ? '+' : '') + p1.toFixed(2);
+      document.getElementById('p2-inline').textContent = (p2 >= 0 ? '+' : '') + p2.toFixed(2);
+
+      document.getElementById('v1-live').textContent = (c1.v >= 0 ? '+' : '') + c1.v.toFixed(2) + ' m/s';
+      document.getElementById('v2-live').textContent = (c2.v >= 0 ? '+' : '') + c2.v.toFixed(2) + ' m/s';
+      document.getElementById('p1-live').textContent = (p1 >= 0 ? '+' : '') + p1.toFixed(2) + ' kg·m/s';
+      document.getElementById('p2-live').textContent = (p2 >= 0 ? '+' : '') + p2.toFixed(2) + ' kg·m/s';
+      document.getElementById('ke1-live').textContent = ke1.toFixed(2) + ' J';
+      document.getElementById('ke2-live').textContent = ke2.toFixed(2) + ' J';
+
+      document.getElementById('pi-total').textContent = (piTotal >= 0 ? '+' : '') + piTotal.toFixed(2);
+      document.getElementById('pf-total').textContent = (pTotal >= 0 ? '+' : '') + pTotal.toFixed(2);
+      document.getElementById('kei-total').textContent = keiTotal.toFixed(2);
+      document.getElementById('kef-total').textContent = keTotal.toFixed(2);
+
+      const keBadge = document.getElementById('ke-status-badge');
+      if (keiTotal > 0.0001) {
+        const pct = Math.round((keTotal / keiTotal) * 100);
+        keBadge.textContent = `${pct}% Retained`;
+      } else {
+        keBadge.textContent = '100% Retained';
+      }
+    }
+
+    function syncInputs() {
+      state.cart1.m = parseFloat(m1Input.value);
+      state.cart2.m = parseFloat(m2Input.value);
+      state.elasticity = parseFloat(elasticityInput.value);
+
+      state.cart1.v = parseFloat(v1Input.value);
+      state.cart1.vInitial = state.cart1.v;
+      state.cart2.v = parseFloat(v2Input.value);
+      state.cart2.vInitial = state.cart2.v;
+
+      document.getElementById('m1-val').textContent = state.cart1.m.toFixed(2);
+      document.getElementById('v1-val').textContent = (state.cart1.v >= 0 ? '+' : '') + state.cart1.v.toFixed(2);
+      document.getElementById('m2-val').textContent = state.cart2.m.toFixed(2);
+      document.getElementById('v2-val').textContent = (state.cart2.v >= 0 ? '+' : '') + state.cart2.v.toFixed(2);
+      document.getElementById('e-val').textContent = Math.round(state.elasticity * 100) + '%';
+
+      if (!state.isRunning) {
+        resetSimulation();
+      } else {
+        updateDashboard();
+      }
+    }
+
+    function drawArrow(x, y, value, color, label, isMomentum = false) {
+      if (Math.abs(value) < 0.01) return;
+      const scale = isMomentum ? 8 : 12;
+      const arrowLen = value * scale;
+      const dir = Math.sign(value);
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + arrowLen, y);
+      ctx.stroke();
+
+      const headLen = 5;
+      ctx.beginPath();
+      ctx.moveTo(x + arrowLen, y);
+      ctx.lineTo(x + arrowLen - dir * headLen, y - headLen);
+      ctx.lineTo(x + arrowLen - dir * headLen, y + headLen);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${label}:${(value >= 0 ? '+' : '')}${value.toFixed(1)}`, x + arrowLen / 2, y - 4);
+      ctx.restore();
+    }
+
+    function draw() {
+      const w = parseFloat(canvas.style.width) || 700;
+      const h = 300;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Track line
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, state.trackY);
+      ctx.lineTo(w, state.trackY);
+      ctx.stroke();
+
+      // Track Ticks
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      for (let px = 20; px < w; px += 40) {
+        ctx.beginPath();
+        ctx.moveTo(px, state.trackY);
+        ctx.lineTo(px, state.trackY + 5);
+        ctx.stroke();
+      }
+
+      // Cart 1 (Blue)
+      const c1 = state.cart1;
+      ctx.save();
+      ctx.fillStyle = c1.color;
+      safeRoundRect(ctx, c1.x, c1.y, c1.width, c1.height, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#1d4ed8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Cart 1 Wheels
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(c1.x + c1.width * 0.25, state.trackY, 5, 0, Math.PI * 2);
+      ctx.arc(c1.x + c1.width * 0.75, state.trackY, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${c1.m.toFixed(1)}kg`, c1.x + c1.width / 2, c1.y + c1.height / 2 + 4);
+      ctx.restore();
+
+      // Cart 2 (Red)
+      const c2 = state.cart2;
+      ctx.save();
+      ctx.fillStyle = c2.color;
+      safeRoundRect(ctx, c2.x, c2.y, c2.width, c2.height, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#be123c';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Cart 2 Wheels
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(c2.x + c2.width * 0.25, state.trackY, 5, 0, Math.PI * 2);
+      ctx.arc(c2.x + c2.width * 0.75, state.trackY, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${c2.m.toFixed(1)}kg`, c2.x + c2.width / 2, c2.y + c2.height / 2 + 4);
+      ctx.restore();
+
+      // Vectors
+      if (state.showVectors) {
+        drawArrow(c1.x + c1.width / 2, c1.y - 10, c1.v, '#1d4ed8', 'v₁');
+        drawArrow(c2.x + c2.width / 2, c2.y - 10, c2.v, '#be123c', 'v₂');
+      }
+
+      if (state.showMomenta) {
+        drawArrow(c1.x + c1.width / 2, c1.y - 24, c1.m * c1.v, '#6366f1', 'p₁', true);
+        drawArrow(c2.x + c2.width / 2, c2.y - 24, c2.m * c2.v, '#6366f1', 'p₂', true);
+      }
+
+      // COM
+      if (state.showCOM) {
+        const comX = (c1.m * (c1.x + c1.width / 2) + c2.m * (c2.x + c2.width / 2)) / (c1.m + c2.m);
+        ctx.save();
+        ctx.strokeStyle = '#d97706';
+        ctx.fillStyle = '#d97706';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(comX, state.trackY - 50);
+        ctx.lineTo(comX, state.trackY + 12);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(comX, state.trackY + 12, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('COM', comX, state.trackY + 24);
+        ctx.restore();
+      }
+
+      // Particles
+      state.particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      });
+    }
+
+    function physicsStep(dt) {
+      if (!state.isRunning) return;
+
+      const effectiveDt = dt * state.timeScale;
+      state.time += effectiveDt;
+      timeDisplay.textContent = state.time.toFixed(2);
+
+      const c1 = state.cart1;
+      const c2 = state.cart2;
+
+      c1.x += c1.v * state.pixelsPerMeter * effectiveDt;
+      c2.x += c2.v * state.pixelsPerMeter * effectiveDt;
+
+      const canvasWidth = parseFloat(canvas.style.width) || 700;
+
+      // 1D Collision Check
+      if (c1.x + c1.width >= c2.x && c1.x < c2.x + c2.width) {
+        if (c1.v > c2.v) {
+          const totalMass = c1.m + c2.m;
+          const overlap = (c1.x + c1.width) - c2.x;
+
+          c1.x -= overlap * (c2.m / totalMass);
+          c2.x += overlap * (c1.m / totalMass);
+
+          const e = state.elasticity;
+
+          if (e === 0) {
+            const vShared = (c1.m * c1.v + c2.m * c2.v) / totalMass;
+            c1.v = vShared;
+            c2.v = vShared;
+          } else {
+            const v1_f = ((c1.m - e * c2.m) * c1.v + (1 + e) * c2.m * c2.v) / totalMass;
+            const v2_f = ((c2.m - e * c1.m) * c2.v + (1 + e) * c1.m * c1.v) / totalMass;
+            c1.v = v1_f;
+            c2.v = v2_f;
+          }
+
+          statusDot.style.background = "#10b981";
+          statusText.textContent = "POST-COLLISION";
+
+          spawnParticles((c1.x + c1.width + c2.x) / 2, state.trackY - Math.min(c1.height, c2.height) / 2);
+        }
+      }
+
+      // Wall boundary collisions
+      if (c1.x < 0) { c1.x = 0; c1.v = -c1.v; }
+      if (c2.x + c2.width > canvasWidth) { c2.x = canvasWidth - c2.width; c2.v = -c2.v; }
+
+      updateParticles(effectiveDt);
+      updateDashboard();
+    }
+
+    function spawnParticles(x, y) {
+      if (state.particles.length > 30) return;
+      for (let i = 0; i < 10; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 20 + Math.random() * 50;
+        state.particles.push({
+          x: x, y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          color: Math.random() > 0.5 ? '#2563eb' : '#e11d48'
+        });
+      }
+    }
+
+    function updateParticles(dt) {
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        const p = state.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt * 3.0;
+        if (p.life <= 0) state.particles.splice(i, 1);
+      }
+    }
+
+    let lastTime = performance.now();
+    function animate(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.033);
+      lastTime = now;
+
+      physicsStep(dt);
+      draw();
+
+      requestAnimationFrame(animate);
+    }
+
+    function resetSimulation() {
+      state.isRunning = false;
+      state.time = 0;
+      timeDisplay.textContent = '0.00';
+
+      btnPlay.innerHTML = '▶ Play';
+      btnPlay.className = "btn btn-primary";
+
+      statusDot.style.background = "#f59e0b";
+      statusText.textContent = "READY";
+
+      const w = parseFloat(canvas.style.width) || 700;
+      state.cart1.x = w * 0.2;
+      state.cart2.x = w * 0.7;
+
+      state.cart1.v = parseFloat(v1Input.value);
+      state.cart1.vInitial = state.cart1.v;
+      state.cart2.v = parseFloat(v2Input.value);
+      state.cart2.vInitial = state.cart2.v;
+      state.cart1.m = parseFloat(m1Input.value);
+      state.cart2.m = parseFloat(m2Input.value);
+
+      updateCartSizes();
+      updateDashboard();
+      draw();
+    }
+
+    [m1Input, v1Input, m2Input, v2Input, elasticityInput].forEach(el => {
+      el.addEventListener('input', syncInputs);
+    });
+
+    document.getElementById('chk-vectors').addEventListener('change', (e) => { state.showVectors = e.target.checked; draw(); });
+    document.getElementById('chk-momenta').addEventListener('change', (e) => { state.showMomenta = e.target.checked; draw(); });
+    document.getElementById('chk-com').addEventListener('change', (e) => { state.showCOM = e.target.checked; draw(); });
+
+    btnPlay.addEventListener('click', () => {
+      state.isRunning = !state.isRunning;
+      if (state.isRunning) {
+        btnPlay.innerHTML = '⏸ Pause';
+        btnPlay.className = "btn";
+        statusDot.style.background = "#2563eb";
+        statusText.textContent = "SIMULATING";
+      } else {
+        btnPlay.innerHTML = '▶ Play';
+        btnPlay.className = "btn btn-primary";
+        statusDot.style.background = "#f59e0b";
+        statusText.textContent = "PAUSED";
+      }
+    });
+
+    btnStep.addEventListener('click', () => {
+      state.isRunning = false;
+      btnPlay.innerHTML = '▶ Play';
+      btnPlay.className = "btn btn-primary";
+      state.isRunning = true;
+      physicsStep(0.016);
+      state.isRunning = false;
+      draw();
+    });
+
+    btnReset.addEventListener('click', resetSimulation);
+
+    document.querySelectorAll('.btn-speed').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        state.timeScale = parseFloat(e.target.dataset.speed);
+      });
+    });
+
+    document.getElementById('btn-elastic').addEventListener('click', () => { elasticityInput.value = 1.0; syncInputs(); });
+    document.getElementById('btn-partial').addEventListener('click', () => { elasticityInput.value = 0.5; syncInputs(); });
+    document.getElementById('btn-inelastic').addEventListener('click', () => { elasticityInput.value = 0.0; syncInputs(); });
+
+    document.querySelectorAll('.btn-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = btn.dataset.preset;
+        if (p === '1') {
+          m1Input.value = 2.0; v1Input.value = 3.0;
+          m2Input.value = 2.0; v2Input.value = 0.0;
+          elasticityInput.value = 1.0;
+        } else if (p === '2') {
+          m1Input.value = 2.0; v1Input.value = 4.0;
+          m2Input.value = 1.0; v2Input.value = 0.0;
+          elasticityInput.value = 0.0;
+        } else if (p === '3') {
+          m1Input.value = 8.0; v1Input.value = 2.5;
+          m2Input.value = 1.0; v2Input.value = 0.0;
+          elasticityInput.value = 1.0;
+        } else if (p === '4') {
+          m1Input.value = 1.0; v1Input.value = 4.0;
+          m2Input.value = 2.0; v2Input.value = -2.0;
+          elasticityInput.value = 1.0;
+        }
+        resetSimulation();
+      });
+    });
+
+    // Record lab measurements
+    document.getElementById('btn-record-trial').addEventListener('click', () => {
+      const p1_i = state.cart1.m * state.cart1.vInitial;
+      const p2_i = state.cart2.m * state.cart2.vInitial;
+      const pi = p1_i + p2_i;
+
+      const p1_f = state.cart1.m * state.cart1.v;
+      const p2_f = state.cart2.m * state.cart2.v;
+      const pf = p1_f + p2_f;
+
+      const kei = 0.5 * state.cart1.m * Math.pow(state.cart1.vInitial, 2) + 0.5 * state.cart2.m * Math.pow(state.cart2.vInitial, 2);
+      const kef = 0.5 * state.cart1.m * Math.pow(state.cart1.v, 2) + 0.5 * state.cart2.m * Math.pow(state.cart2.v, 2);
+
+      const trial = {
+        id: state.recordedTrials.length + 1,
+        type: Math.round(state.elasticity * 100) + '% Elast',
+        pi: pi.toFixed(2),
+        pf: pf.toFixed(2),
+        kei: kei.toFixed(2),
+        kef: kef.toFixed(2)
+      };
+
+      state.recordedTrials.push(trial);
+      renderTrialsTable();
+    });
+
+    function renderTrialsTable() {
+      const tbody = document.getElementById('trial-log-body');
+      const noRow = document.getElementById('no-trials-row');
+      if (noRow) noRow.remove();
+
+      tbody.innerHTML = state.recordedTrials.map(t => `
+        <tr>
+          <td>#${t.id}</td>
+          <td style="color: #4f46e5; font-weight: bold;">${t.type}</td>
+          <td>${t.pi}</td>
+          <td style="color: #2563eb; font-weight: bold;">${t.pf}</td>
+          <td>${t.kei}</td>
+          <td style="color: #d97706; font-weight: bold;">${t.kef}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Export CSV dataset
+    document.getElementById('btn-export-csv').addEventListener('click', () => {
+      if (state.recordedTrials.length === 0) return;
+
+      let csv = "Trial,Type,Initial_Momentum(kg m/s),Final_Momentum(kg m/s),Initial_KE(J),Final_KE(J)\n";
+      state.recordedTrials.forEach(t => {
+        csv += `${t.id},${t.type},${t.pi},${t.pf},${t.kei},${t.kef}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'collisions_lab_data.csv');
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      resetSimulation();
+      requestAnimationFrame(animate);
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+  </script>
+</body>
+</html>
